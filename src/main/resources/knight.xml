@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+    <!-- 创建SlayDragonQuest Quest实例-->
+    <bean id="quest" class="com.springinaction.knights.SlayDragonQuest">
+        <constructor-arg value="#{T(System).out}" />
+    </bean>
+
+    <bean id="minstrel" class="com.springinaction.knights.Minstrel">
+        <constructor-arg value="#{T(System).out}" />
+    </bean>
+
+    <bean id="knight" class="com.springinaction.knights.BraveKnight">
+        <constructor-arg ref="quest"/>   <!-- 注入Quest bean -->
+    </bean>
+
+    <bean id="knight_di" class="com.springinaction.knights.BraveKnight_DI">
+        <constructor-arg ref="quest"/>   <!-- 注入Quest bean -->
+        <constructor-arg ref="minstrel"/>   <!-- 注入Minstrel bean -->
+    </bean>
+
+    <!--
+        在这个文件中，BraveKnight和SlayDragonQuest被声明为Spring的bean。
+        就BraveKnight bean来讲，它在构造时传入了SlayDragonQuest bean的引用，将其作为构造器参数。
+        同时，SlayDragonQuest bean的声明使用了Spring表达式语言（Spring Expression language),
+        将System.out（这是一个PrintStream）传入到了SlayDragonQuest的构造器中。
+
+        如果XML不符合你的喜好，Spring还支持使用Java来描述配置，如KnightConfig配置类
+
+    -->
+
+</beans>

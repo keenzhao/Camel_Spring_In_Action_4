@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <bean id="quest" class="com.springinaction.knights.SlayDragonQuest">
+        <constructor-arg value="#{T(System).out}"/>
+    </bean>
+
+    <bean id="knight" class="com.springinaction.knights.BraveKnight">
+        <constructor-arg ref="quest"/>   <!-- 注入Quest bean -->
+    </bean>
+
+    <!-- 切面类 -->
+    <bean id="minstrel" class="com.springinaction.knights.Minstrel">
+        <constructor-arg value="#{T(System).out}"/>
+    </bean>
+
+    <!-- Spring AOP配置 与Eclipse AspectJ的类定义结构是一致的 -->
+    <aop:config>
+
+        <aop:aspect ref="minstrel">
+
+            <aop:pointcut id="embark" expression="execution(* *.embarkOnQuest(..))"/>
+
+            <aop:before pointcut-ref="embark" method="singBeforeQuest"/>
+
+            <aop:after pointcut-ref="embark" method="singAfterQuest"/>
+
+        </aop:aspect>
+
+    </aop:config>
+
+    <!--
+        从这个实例中获得两个重要的观点：
+        首先，Minstrel仍然是一个POJO，没有任何代码表明它要被作为一个切面使用。当我们像上面那样配置后，
+        在Spring上下文中，Minstrel实际上已经变成一个切面了。
+        其次，也是最重要的，Minstrel可以应用到BraveKnight中，而BraveKnight不需要显式地调用它。实际上
+        BraveKnight完全不知道Minstrel的存在。
+
+        必须还要指出的是，尽管我们使用Spring魔法将Minstrel转变成一个切面，但首先要把它声明为一个Spring bean。
+        能够为其他Spring bean做到的事情都可以同样应用到Spring切面中，例如为它们注入依赖。
+        AOP实现声明式事务和安全（见第9、14章）
+
+    -->
+
+</beans>
