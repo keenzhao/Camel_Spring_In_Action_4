@@ -14,7 +14,8 @@ public class BeanContainer02 {
      * 因为你或许要利用Spring提供的扩展点来自定义bean的创建过程。
      * Spring的bean装载到Spring应用上下文中的一个典型的声明周期过程：
      *
-     *
+     * 1、Spring对bean进行实例化；
+     * 2、Spring将值和bean的引用注入到bean对应的属性中；
      *
      */
 
