@@ -32,6 +32,58 @@ public class BeanContainer02 {
      * 也没有，为了从Spring的DI中受益，我们必须将应用对象装配近Spring容器。
      *
      * 1.3 Spring的体系结构
+     * 在Spring框架之外还存在一个构建在核心框架之上的庞大生态圈，将Spring扩展到不同的领域，例如Web服务、REST、
+     * 移动开发以及NoSQl。
+     *
+     * 1.3.1 Spring模块
+     * 在Spring4的发行版中包括了20个不同的模块：
+     *      spring-aop-4.0.0.RELEASE.jar
+     *      spring-aspects-4.0.0.RELEASE.jar
+     *      spring-beans-4.0.0.RELEASE.jar
+     *      spring-context-4.0.0.RELEASE.jar
+     *      spring-context-support-4.0.0.RELEASE.jar
+     *      spring-core-4.0.0.RELEASE.jar
+     *      spring-expression-4.0.0.RELEASE.jar
+     *      spring-instrument-4.0.0.RELEASE.jar
+     *      spring-instrument-tomcat-4.0.0.RELEASE.jar
+     *      spring-jdbc-4.0.0.RELEASE.jar
+     *      spring-jms-4.0.0.RELEASE.jar
+     *      spring-messaging-4.0.0.RELEASE.jar
+     *      spring-orm-4.0.0.RELEASE.jar
+     *      spring-oxm-4.0.0.RELEASE.jar
+     *      spring-test-4.0.0.RELEASE.jar
+     *      spring-tx-4.0.0.RELEASE.jar
+     *      spring-web-4.0.0.RELEASE.jar
+     *      spring-webmvc-4.0.0.RELEASE.jar
+     *      spring-webmvc-portlet-4.0.0.RELEASE.jar
+     *      spring-websocket-4.0.0.RELEASE.jar
+     *
+     * 这些模块依据所属的功能可以划分为6类不同的功能：
+     *  1）数据集成访问
+     *     JDBC、Transaction、ORM、OXM、Messaging、JMS
+     *  2）Web与远程调用
+     *     Web、Web Servlet、Web Portlet、WebSocket
+     *  3）面向切面编程
+     *     AOP、Aspects
+     *  4）Instrumentation
+     *     Instrument、Instrument Tomcat
+     *  5）Spring核心容器
+     *     Beans、Core、Context、Expression、Context-support
+     *  5）测试
+     *     Test
+     *
+     *
+     * 现在逐一浏览Spring的模块，看看它们是如何构建起Spring整体蓝图的。
+     *
+     * ★Spring核心容器
+     *        容器是Spring框架最核心的部分，它管理着Spring应用中bean的创建、配置和管理。在该模块中，
+     *    包括了Spring bean工厂，它为Spring提供了DI功能。基于bean工厂，还会发现有多种Spring上下文的实现，
+     *    每一种都是提供了配置Spring的不同方式。
+     *        除了bean工厂和应用上下文，该模块也提供了许多企业服务，例如E-mail、JNDI访问、EJB集成和调度。
+     *        所有的Spring模块都构建于核心容器之上。当你配置应用时，其实你隐式地使用了这些类。贯穿全部，
+     *    我们都会涉及到核心模块。后面会深入讨论Spring的DI。
+     *
+     * ★Spring的AOP模块
      *
      */
 
