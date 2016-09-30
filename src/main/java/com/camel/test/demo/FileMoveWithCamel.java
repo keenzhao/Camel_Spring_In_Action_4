@@ -37,7 +37,7 @@ public class FileMoveWithCamel {
                 new RouteBuilder() {
                     @Override
                     public void configure() throws Exception {
-                        //delay=30000是每隔30秒轮询一次文件夹中是否有文件
+                        //delay=10000是每隔10秒轮询一次文件夹中是否有文件
                         from("file:d:/temp/inbox?delay=10000").to("file:d:/temp/outbox");
                     }
                 }
