@@ -5,7 +5,7 @@ package com.camel.test.demo.document;
  *
  * Created by keen.zhao on 2016/10/1.
  */
-public class CamelIntroduction_txt {
+public class CamelIntroduction01_txt {
     /**
      * 1.1、介绍Camel
      *        Camel是一个整合框架，其目的是使你的所有项目更高效有趣，Camel项目始于2007年，目前已是
@@ -45,7 +45,7 @@ public class CamelIntroduction_txt {
      *              POJO模型
      *              容易配置
      *              数据类型自动转换
-     *              轻量核心
+     *              轻量级核心
      *              测试套件
      *              充满活力的社区
      *
@@ -98,8 +98,40 @@ public class CamelIntroduction_txt {
      *         某一规范格式来方便路由。
      *
      *      ★ 丰富的组件库
+     *         Camel的模块化设计可以把任意Component加载到Camel的运行环境中去，而不用考虑这些Component是不是
+     *         Camel自身提供的，它可以第三方提供的也可以您自定义的。
      *
+     *      ★ POJO模型
+     *         在Camel中，Beans（或者POJO）被当做一等公民，Camel力争让您在项目集成中的任何地方任何时间都能使用
+     *         Beans，这意味着您可以把Camel的内置功能扩展到您自己的代码中
      *
+     *      ★ 容易配置
+     *         根据“约定优于配置”（Convention Over Configuration）的原则可以减小配置任务，为了直接把端点
+     *         （Endpoints）配在路由（Rourte）里，Camel 提供了人性化的配置。
+     *         打个比方，您要配一个文件接收器（Consumer）在一个目录下去扫描以.txt结尾的文件（包括子目录），
+     *         可以做如下配置：
+     *               from("file:data/inbox?recursive=true&include=*.txt")...
+     *
+     *      ★ 数据类型自动转换
+     *         Camel内置的类型转换机制有150多种，比如您不需要去显示的去配置一个类型转换器把字节数组转换成字符串，
+     *         假如您需要一个转换器是Camel没有的，您需要自己去定义。但是别担心，流行的那些转换器Camel都已经实现了。
+     *
+     *      ★ 轻量级核心
+     *         Camel 的核心非常非常轻量，整个包只1.6MB，它仅依赖于Apache Commons Logging和资源的通用管理。
+     *         这足够让您可以把Camel部署或内嵌到任何地方，比如一个standalone的应用，web应用，Spring应用，
+     *         Java EE应用，JBI容器[3]，OSGi Bundle, Java Web Start或者Google App Engine。所以Camel不是
+     *         被设计成为一台Server或者ESB，而是一个可以被内嵌在任何您想用的平台里。
+     *
+     *      ★ 测试套件
+     *         为了方便测试您的Camel 程序，Camel提供了测试套件，这个套件Camel自身也在广泛使用，大概有6000多[4]
+     *         个单元测试用例，测试套件（Test Kit）中包含了测试专用组件，比如它可以Mock真实的Endpoints，同时提
+     *         供Expectation来判断程序运行是否达到预期效果，是成功还失败。
+     *
+     *      ★ 充满活力的社区
+     *         富有活力的社区是您计划在您的应用中使用开源软件的必备条件，不活跃的开源项目的社区一般不太行，
+     *         一旦您遇到问题就只能孤军奋战了。而使用Camel时遇到问题，Camel的使用者和Camel的开发人员都会积极的帮助您。
+     *
+     *  现在您已经浏览了Camel的主要特性，接下来，我们将看一看Camel的发布包并尝试一个简单的例子。
      *
      */
 }
