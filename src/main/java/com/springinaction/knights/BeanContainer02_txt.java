@@ -4,7 +4,7 @@ package com.springinaction.knights;
  *
  * Created by keen.zhao on 2016/9/29.
  */
-public class BeanContainer02 {
+public class BeanContainer02_txt {
     /**
      * 1.2.2 bean的生命周期
      * 传统的java应用中，bean的声明周期很简单，使用java关键字new进行bean实例化，然后该bean就可以使用了。

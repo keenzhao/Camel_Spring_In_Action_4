@@ -4,7 +4,7 @@ package com.springinaction.knights;
  *
  * Created by keen.zhao on 2016/9/27.
  */
-public class BeanContainer01 {
+public class BeanContainer01_txt {
 
     /**
      * 1.2 容纳你的Bean
