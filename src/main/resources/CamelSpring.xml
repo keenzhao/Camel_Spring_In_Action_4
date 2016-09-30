@@ -7,11 +7,13 @@
        default-autowire="byName" default-init-method="init">
 
     <bean id="fileConverter" class="com.camel.test.demo.FileConvertProcessor"/>
+
     <camelContext id="testCamelContext" xmlns="http://camel.apache.org/schema/spring">
         <route>
-            <from uri="file:d:/temp/inbox?delay=30000"/>
+            <from uri="file:d:/temp/inbox?delay=10000"/>
             <process ref="fileConverter"/>
             <to uri="file:d:/temp/outbox"/>
         </route>
     </camelContext>
+
 </beans>
