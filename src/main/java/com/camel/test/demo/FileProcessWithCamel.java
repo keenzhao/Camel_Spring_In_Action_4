@@ -31,19 +31,21 @@ public class FileProcessWithCamel {
                     @Override
                     public void process(Exchange exchange) throws Exception {
                         try {
+
                             InputStream body = exchange.getIn().getBody(InputStream.class);
                             BufferedReader in = new BufferedReader(new InputStreamReader(body,"UTF-8"));
-                            StringBuffer strBuffer = new StringBuffer("");
-                            String str = null;
+                            StringBuilder sb = new StringBuilder("");
+                            String str;
                             str = in.readLine();
                             while (str != null) {
                                 System.out.println(str);
-                                strBuffer.append(str + " ");
+                                sb.append(str);
+                                sb.append(" ");
                                 str = in.readLine();
                             }
                             exchange.getOut().setHeader(Exchange.FILE_NAME, "converted"+ new Random().nextInt(100)+".txt");
                             //设置输出到文件
-                            exchange.getOut().setBody(strBuffer.toString());
+                            exchange.getOut().setBody(sb.toString());
 
                         } catch (IOException e) {
                             e.printStackTrace();
