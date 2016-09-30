@@ -21,4 +21,6 @@ package com.camel.test.demo;
  */
 public class FileMoveWithCamel {
 
+
+
 }
