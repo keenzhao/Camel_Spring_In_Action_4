@@ -1,7 +1,5 @@
 package com.springinaction.knights;
 
-import com.sun.istack.internal.Nullable;
-
 import java.sql.*;
 
 /**
@@ -31,7 +29,7 @@ public class JdbcDemo {
     }
 
     //样板代码的例子演示
-    @Nullable public static Employee getEmployeeById(long id) {
+    public static Employee getEmployeeById(long id) {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
