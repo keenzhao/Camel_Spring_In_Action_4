@@ -14,7 +14,7 @@ public class CamelIntroduction03_txt {
      *                                       消息交换有个"in"消息，作为回复，还有一个"out"消息。
      *
      *     我们开始通过查看消息来理解数据是怎样在Camel中被建模和传输的。
-     *     我们将看到在Camel中"conversation"是怎样被夹建模的。
+     *     我们将看到在Camel中"conversation"是怎样被建模的。
      *
      * 1.3.1 Message（消息）
      *     消息是用于系统相互通信时消息信道的实体，是从发送者到接收者的一个方向上的消息流，如下示意：
