@@ -9,10 +9,10 @@ public class CamelIntroduction02_txt {
     /**
      * 1.2 快速开始
      *
-     * 1.2.1 获取camel
+     * 1.2.1 获取Camel
      *      在官方Apache Camel上可以看到Camel的下载地址（http://camel.apache.org/download.html）。
      *
-     * 1.2.2 你的第一次驾驭camel
+     * 1.2.2 你的第一次驾驭Camel
      *          第一个例子我们会用传统的"hello world"：路由文件。假如你需要读一个目录（data/inbox）下面的文件，
      *      然后用一定的方式进行处理，然后把结果写到另外一个文件目录（data/outbox）。为简单起见，你会跳过
      *      处理，所以你的输出将仅仅是原始文件的一个副本。
