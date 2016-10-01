@@ -9,7 +9,7 @@ import org.apache.camel.impl.DefaultCamelContext;
 /**
  * 一个从from到to有中间流程process处理的例子
  * 测试时候用txt文件，UTF-8编码
- * <p>
+ *
  * Created by keen.zhao on 2016/9/30.
  */
 public class FileProcessWithCamel {

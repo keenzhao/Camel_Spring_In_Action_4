@@ -7,7 +7,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Random;
 
 /**
  *
@@ -29,7 +28,13 @@ public class FileConvertProcessor implements Processor {
                 sb.append(" ");
                 str = in.readLine();
             }
-            exchange.getOut().setHeader(Exchange.FILE_NAME, "converted" + new Random().nextInt(100) + ".txt");
+
+            System.out.println("=======>"+exchange.getProperties().keySet().toString());
+            System.out.println("=======>"+exchange.getIn().getHeaders().keySet().toString());
+            System.out.println("=======>"+exchange.getIn().getHeader(Exchange.FILE_NAME_ONLY).toString());
+
+            //文件名保留为原文件名，关于文件的信息，存在与Headers中
+            exchange.getOut().setHeader(Exchange.FILE_NAME, exchange.getIn().getHeader(Exchange.FILE_NAME_ONLY).toString());
             //设置输出到文件
             exchange.getOut().setBody(sb.toString());
 
