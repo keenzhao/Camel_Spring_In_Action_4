@@ -1,4 +1,4 @@
-package com.camel.test.demo.example;
+package com.camel.test.demo.example.c1;
 
 import java.io.*;
 
