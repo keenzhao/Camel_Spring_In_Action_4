@@ -49,7 +49,7 @@ public class CamelIntroduction03_txt {
      * 1.3.2 Exchange（交换）
      *        在路由过程中，Camel的Exchange是Message的容器。Exchange在系统间也提供了支持各种类型的交互，也被
      *        称作消息交换模式(message exchange patterns,MEPs),MEPs的使用在单向和请求响应通讯方式上有区别的。
-     *        Camel的Exchange能容纳两者之间任意一种模式属性。
+     *        Camel的Exchange能容纳两种属性中的任意一种模式。
      *             InOnly ---- 单向消息（也称为事件消息），例如，JMS消息往往是单向的信息传递。
      *             InOut ----  请求响应消息。例如，基于HTTP的传输常常是请求应答的，一个客户端请求检索网页，
      *                         等待服务器的应答。
