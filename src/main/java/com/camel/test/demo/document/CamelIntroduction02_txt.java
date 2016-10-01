@@ -16,9 +16,9 @@ public class CamelIntroduction02_txt {
      *          第一个例子我们会用传统的"hello world"：路由文件。假如你需要读一个目录（data/inbox）下面的文件，
      *      然后用一定的方式进行处理，然后把结果写到另外一个文件目录（data/outbox）。为简单起见，你会跳过
      *      处理，所以你的输出将仅仅是原始文件的一个副本。
-     *       -------------                      --------------
-     *      | data/inbox |  -----> File -----> | data/outbox |
      *      -------------                      --------------
+     *      | data/inbox |  -----> File -----> | data/outbox |
+     *       -------------                      --------------
      *          它看起来很简单是不是。这是用纯java的一个可能的解决方案（不用Camel）。
      *      详见: com.camel.test.demo.example.FileCopier类
      *          纯java实现是个十分简单的用例，但是用java实现仍旧需要34行代码。你不得不使用低级的文件API，
