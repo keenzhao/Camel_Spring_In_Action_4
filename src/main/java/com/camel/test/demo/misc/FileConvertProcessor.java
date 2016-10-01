@@ -1,4 +1,4 @@
-package com.camel.test.demo;
+package com.camel.test.demo.misc;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
