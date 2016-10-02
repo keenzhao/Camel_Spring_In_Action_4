@@ -107,13 +107,50 @@ public class CamelIntroduction04_txt {
      *
      *            ★ COMPONENT（组件）
      *               在Camel中，components是主要的扩展点。到目前为止，在Camel的生态系统中有超过80个（实际现在已经超过
-     *               150个了）components，功能范围从数据传输、DSLs、数据格式等等。你甚至可以为Camel创建自己的组件。
+     *               150个）components，功能范围从数据传输、DSLs、数据格式等等。你甚至可以为Camel创建自己的组件。
      *               在第11章我们将讨论它。
      *               从编程的观点看，components是相当简单的：关联一个在URI中使用的名字，充当一个端点工厂。例如，一个
-     *               FileComponent通过在uri中的file来指定，并且它创建了一个FileEndpoints。
+     *               FileComponent通过在uri中的名字file来指定，并且它创建了一个FileEndpoints。
      *               endpoint也许是Camel中更基本的概念。
      *
      *            ★ ENDPOINT（端点）
+     *               endpoint是一个能发送和接受消息的系统的通道端的Camel的抽象模型，如图1.8所示。
+     *               在Camel中，你使用URIs配置endpoint，例如file:data/inbox?delay=5000，并且你同样要参考这种方式。
+     *               在运行时刻，Camel将基于URI标记法来查找一个endpoint，图1.9显示了这是如何工作的。
+     *               scheme ① 指出Camel组件要操作endpoint的类型，在这个案例中，file的scheme表示选择了FileComponent。
+     *               FileComponent然后会像工厂一样基于URI剩余部分创建FileEndpoint。上下文路径 data/inbox ② 告诉
+     *               FileComponent开始的文件夹是data/inbox。选项delay=5000 ③ 表明每隔5秒对文件进行轮询。
+     *               会有更多的endpoint进入我们的视线。图1.10显示了一个endpoint如何与一个exchange、生产者、消费者在
+     *               一起工作的。乍看起来，图1.10有点令人不知所措，但是它立刻将一切变得都有意义。简而言之，一个endpoint
+     *               充当一个工厂，创建具有接受和发送消息到特定endpoint能力的消费者和生产者。在图1.6的Camel高层次视图
+     *               中，我们没有提及生产者或消费者，但它们是重要的概念，下一节，我们将认真讨论它们。
+     *
+     *            ★ PRODUCER（生产者）
+     *               一个生产者是Camel抽象概念，意指一个能够创建和发送一个消息到一个端点的实体。图1.10说明了生产者相适应
+     *               其他Camel的概念。
+     *               当一个消息需要被发送到endpoint时，生产者将创建一个exchange并填充兼容那个特定endpoint的数据。例如，
+     *               一个FileProducer会将消息体(message body)写到一个文件。在另一方面，一个JmsProducer，在将Camel的
+     *               消息发送到JMS目的地之前会把Camel的message映射到javax.jms.Message，在Camel中，这是一个重要的特性，
+     *               因为它隐藏了使用特定传输的交互复杂性。你所需要做的就是将一个消息路由到一个端点，生产者做了最重的活。
+     *
+     *            ★ CONSUMER（消费者）
+     *               消费者是接收生产者制造出的消息的服务，把它们包装在一个exchange中，并发送它们去处理。在Camel中，
+     *               消费者是被路由的exchanges的源头。
+     *               回过头来看图1.10，我们可以看到消费者与其他Camel概念相适应的地方。要创建一个新的exchange，消费者
+     *               将使用endpoint来包装将被消费的有效载荷。然后，使用一个处理器在Camel中使用路由引擎来启动exchange路由。
+     *               在Camel中有两种消费者：事件驱动消费者和轮询消费者。这些消费者之间的差异是很重要的，因为他们有助于
+     *               解决不同的问题。
+     *
+     *            ★ EVENT-DRIVEN CONSUMER（事件驱动消费者）
+     *               大多数的消费者是事件驱动消费者，如图1.11所示。
+     *               这种消费者主要是与客户/服务器架构和Web服务相关联的。在EIP中它也被称为异步接收器。一个事件驱动的消费者
+     *               在一个特定的消息传递通道上监听，通常是一个TCP/IP端口或JMS队列，并等待客户端发送消息给它。当消息到达时，
+     *               消费者醒来并获取消息来处理。
+     *
+     *            ★ POLLING CONSUMER（轮询消费者）
+     *               另一种消费者是轮询的消费者，如图1.12所示。
+     *
+     *
      *
      *
      *
