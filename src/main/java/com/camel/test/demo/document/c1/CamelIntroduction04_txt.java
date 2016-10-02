@@ -149,12 +149,48 @@ public class CamelIntroduction04_txt {
      *
      *            ★ POLLING CONSUMER（轮询消费者）
      *               另一种消费者是轮询的消费者，如图1.12所示。
+     *               与事件驱动消费者相比之下，轮询消费者会从特定的源去主动去拿消息，例如一个FTP服务器。在EIP术语中，轮询
+     *               消费者也被称为同步接收器，因为在结束当前正在处理的消息之前他不会去轮询更多的消息。轮询消费者的一个共同
+     *               的特点是定期轮询消费，即在预定的时间间隔内进行轮询。文件，FTP和电子邮件传输都使定期轮询消费者。
+     *               我们现在已经涵盖了所有的Camel的核心概念。有了这个新的知识，可以反复访问你的“第一次骑骆驼”，看究竟发生
+     *               了什么。
      *
      *
+     *  1.5 重访你的第一次骑骆驼
+     *      记得在你第一次骑骆驼（第1.2.2节），你从一个目录（数据/收件箱）读文件并将结果写到另一个目录（数据/箱）。
+     *      既然你知道了Camel的核心概念，你就可以把这个例子显示在脑海中。
+     *      再看一看Camel的应用。
      *
+     *      public class FileCopierWithCamel {
+     *          public static void main(String args[]) throws Exception {
+     *              CamelContext context = new DefaultCamelContext();
+     *              context.addRoutes(new RouteBuilder() {
+     *                      public void configure() {
+     *                          from("file:data/inbox?noop=true")  // ① java DSL route
+     *                              .to("file:data/outbox");
+     *                      }
+     *                  });
+     *              context.start();
+     *              Thread.sleep(10000);
+     *              context.stop();
+     *          }
+     *      }
      *
+     * 在这个例子中，您首先创建一个CamelContext，这是Camel的运行环境。然后通过DSL使用RouteBuilder和java DSL添加路由逻辑，
+     * 你能干净而又简明地让Camel实例化components，endpoint，consumer，producer等等，你所有的关注点在为您的集成项目的问题
+     * 定义路由。尽管在底层，Camel访问FileComponent并像工厂一样创建endpoint和它的生产者。相同的FileComponent也用于创建
+     * 消费方。
      *
+     *  1.6 总结
+     *      在本章中你遇到了Camel，看到了依赖已知的EIPs，Camel是如何简化集成的。你也看到了Camel的DSL,其目的使Camel代码自
+     *      我记录，让开发者关注中间代码做什么，而不是如何做的。我们涉及了Camel的主要特性，Camel是什么，不是什么以及它能用
+     *      在那里。我们看到Camel如何提供抽象概念并工作在大范围的协议和数据格式之上的API。在这点上，你应该多Camel做什么有
+     *      一个很好的理解，以及Camel背后的概念是什么。很快你将能够自信地浏览Camel的应用程序，并获得他们所做的一个好理念。
+     *      在本书的其余部分中，我们将探讨Camel的特点，并给你实用的解决方案，你可以应用在日常的集成方案中去。
+     *      我们还将解释在Camel强壮的表面下发生了什么事。为了确保你获取到每一章的主要概念，从现在开始，我们将向你介绍一些
+     *      最佳实践和要点总结。
      *
+     *      在下一章中，我们将深入研究路由，这是一个重要的功能和一个有趣的学习。
      */
 
 }
