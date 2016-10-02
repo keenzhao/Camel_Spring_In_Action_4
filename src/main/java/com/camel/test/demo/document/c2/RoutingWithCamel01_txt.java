@@ -6,5 +6,11 @@ package com.camel.test.demo.document.c2;
  */
 public class RoutingWithCamel01_txt {
 
+    /**
+     *  Routing with Camel（Camel的路由）
+     *
+     *
+     *
+     */
 
 }
