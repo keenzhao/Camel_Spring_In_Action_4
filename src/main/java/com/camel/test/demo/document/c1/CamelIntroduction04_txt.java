@@ -7,5 +7,10 @@ package com.camel.test.demo.document.c1;
  */
 public class CamelIntroduction04_txt {
 
+    /**
+     *
+     *
+     *
+     */
 
 }
