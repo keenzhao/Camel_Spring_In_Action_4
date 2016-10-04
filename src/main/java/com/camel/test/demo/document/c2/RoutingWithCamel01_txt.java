@@ -62,6 +62,18 @@ public class RoutingWithCamel01_txt {
      *           4、下载所有新的订单文件
      *       如图2.3所示（注意原书图的option部分少了"="号）。你可以通过URI标记法轻松地配置Camel做这些工作。
      *
+     *       Camel将首先在组件注册表查找ftp方案，ftp将决定为FtpComponent，FtpComponent则作为一个工厂，创建基于余下
+     *       的上下文路径和选项的FtpEndpoint。上下文路径rider.com/orders告诉FtpComponent，它应该在rider.com上使用
+     *       默认的FTP端口登录到FTP服务器并更改目录到"orders"。最后，唯一被指定的选项是用于登录到FTP服务器的用户名
+     *       和密码。
+     *
+     *            小窍门：对于FTP组件，你也可以在URI的上下文路径里指定用户名和密码。
+     *            以下URI等效于图2.3中的URI:
+     *            ftp://rider:secret@rider.com/orders
+     *
+     *
+     *
+     。
      */
 
 }
