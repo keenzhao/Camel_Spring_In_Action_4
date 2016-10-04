@@ -71,6 +71,24 @@ public class RoutingWithCamel01_txt {
      *            以下URI等效于图2.3中的URI:
      *            ftp://rider:secret@rider.com/orders
      *
+     *       FtpComponent不是Camel核心模块，因此你需要添加一个额外的依赖到你的项目中，使用Maven你只需要添加以下
+     *       依赖到POM即可：
+     *          <dependency>
+     *              <groupId>org.apache.camel</groupId>
+     *              <artifactId>camel-ftp</artifactId>
+     *              <version>2.5.0</version>
+     *          </dependency>
+     *
+     *       尽管这个endpoint的URI在一个用它来从FTP服务器上下载订单的消费者或生产者场景中会工作得同样好。要这样做，
+     *       你需要在Camel的DSL的节点from中使用它(URI)：
+     *             from("ftp://rider.com/orders?username=rider&password=secret")
+     *       这就是你要从一个FTP服务器来消费文件而所有需要做的。下一步你需要做的事情，因为你可能会从图2.2回想起，是那
+     *       就是发送你从FTP服务器下载的订单到一个JMS队列。这个过程需要多一点的设置，但它仍然很容易。
+     *
+     * 2.2.2 发送到JMS队列（Sending to a JMS queue）
+     *
+     *
+     *
      *
      *
      。
