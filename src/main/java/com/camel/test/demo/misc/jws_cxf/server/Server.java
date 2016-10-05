@@ -4,9 +4,7 @@ import javax.xml.ws.Endpoint;
 
 /**
  * 服务端
- * 运行后访问：http://localhost:9000/CxfTestDemo01?wsdl
- * 可以看到wsdl内容
- * <p>
+ *
  * Created by keen.zhao on 2016/10/5.
  */
 public class Server {
