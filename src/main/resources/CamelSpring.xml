@@ -8,7 +8,7 @@
        http://camel.apache.org/schema/spring/camel-spring.xsd"
        default-autowire="byName" default-init-method="init">
 
-    <bean id="fileConverter" class="com.camel.test.demo.misc.FileConvertProcessor"/>
+    <bean id="fileConverter" class="com.camel.test.demo.misc.camel_misc.FileConvertProcessor"/>
 
     <camelContext id="testCamelContext" xmlns="http://camel.apache.org/schema/spring">
         <route>

@@ -65,9 +65,9 @@ public class RoutingWithCamel02_txt {
      *       一个单独的编译器或者解释器来执行。
      *       相比之下，内部的DSL使用现有的通用语言，如java，以这样的一种方式，DSL感觉像来自特定域语言。做这个
      *       最明显的方式是通过命名方法和参数来匹配来自问题域的概念。
-     *       其他实现内部DSLs的流行方式是使用fluent(连贯)接口(aka fluent builders）。当使用一个fluent接口时，
-     *       你用一些方法逐步建立对象，这些方法执行一个操作返回当前对象实例，然后在这个对象实例上执行其他的方法，
-     *       依此类推。
+     *       其他实现内部DSLs的流行方式是使用fluent interface(流式接口)(aka fluent builders）。当使用一个流式
+     *       接口时，你用一些方法逐步建立对象，这些方法执行一个操作返回当前对象实例，然后在这个对象实例上执行其
+     *       他的方法，依此类推。
      *       （译者注：要想了解fluent接口请自行参考资料，这里不宜过多叙说，不是一段话能说明白的，作者表达的思想是
      *       Java DSL实现的是fluent接口，这不是本书的关注点！）
      *
@@ -89,6 +89,44 @@ public class RoutingWithCamel02_txt {
      *
      *       在这个简单路由中的消息流可以被看成一个基本管道，其中的消费者的输出被馈送到生产者的输入，如图2.8所示。
      *
+     *       你可能已经注意到一件事是从FTP文件类型的JMS消息类型我们没有任何转换---这个是由Camel的TypeConverter功能
+     *       自动去做的。在路由过程中，你随时可以发生强制类型转换，但通常你不必担心它们。在第3章中详细介绍数据转换
+     *       和类型转换。
+     *
+     *        你现在可能在想，虽然这条路由是很好的和简单的，真的很高兴看到路由的中间发生了什么。幸运的是，Camel总是
+     *        通过提供挂钩到流（Hook不翻译成中文更好理解）的方式或注入行为特性来让开发人员保持控制。通过使用一个处理
+     *        器有一个非常简单的方式获得访问的消息，我们下一个将讨论下。
+     *
+     *        ★ 加入一个处理器（ADDING A PROCESSOR）
+     *          Camel的处理器接口是复杂路由的一个重要组成模块。它是一个简单的接口，有一个单一方法：
+     *
+     *             public void process(Exchange exchange) throws Exception;
+     *
+     *          这个给了你全权访问消息exchange的能力，无论你想要payload还是Headers，基本上都可以做到。
+     *          Camel中的所有的EIPs都是以processor实现的。您甚至可以添加一个简单的processor到您的路由内联，像这样：
+     *
+     *               from("ftp://rider.com/orders?username=rider&password=secret").
+     *                  process(new Processor() {
+     *                          public void process(Exchange exchange) throws Exception {
+     *                              System.out.println("We just downloaded: "
+     *                              + exchange.getIn().getHeader("CamelFileName"));
+     *                          }
+     *                  }).
+     *                  to("jms:incomingOrders");
+     *
+     *           现在这个路由在发送订单文件到JMS队列之前，将打印输出下载的订单文件名。
+     *
+     *           通过添加这个processor到路由中，你已经有效地把它添加到早先提到的概念管道，如图2.9所示。
+     *           FTP消费者的输出馈送到Processor作为输入，Processor没有修改消息的payload和headers，所以exchange移动
+     *           到JMS生产者作为输入。
+     *
+     *                注意：许多组件，如FileComponent和FtpComponent,在incoming消息上设置有用的headers描述有效载荷。
+     *                在前面的例子中，你使用了CamelFileName标头（headers）检索了通过FTP下载的文件的文件名。component
+     *                页面的联机文档包含了每个单独组件的标头集合，关于FTP组件的信息你可以在在这里找到：
+     *                http://camel.apache.org/ftp2.html
+     *
+     *           Camel创建路由的主要方法是通过Java DSL。毕竟，它是Camel核心模块内置的。虽然有其他的方式创建路由，它们
+     *           中一些可能更适合你的情况。比如，Camel为在Groovy, Scala中写路由提供了扩展，以及我下节讨论的Spring XML。
      *
      */
 
