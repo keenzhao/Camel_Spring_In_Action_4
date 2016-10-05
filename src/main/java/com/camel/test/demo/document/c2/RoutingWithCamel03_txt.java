@@ -88,8 +88,85 @@ public class RoutingWithCamel03_txt {
      *              }
      *         }
      *
+     * 在这里你实例化ClassPathXmlApplicationContext加载你先前在bean.xml文件中看到的bean定义。你可以在context上调用
+     * getBean方法在Spring的注册表中用greetMeBean的ID来查找bean。所有在这个文件中定义的bean都以这种方式访问。
+     *
+     * 这个例子看起来很简单，但它应该给了你关于Spring是什么的理解，更一般的意义上讲实际上是一个IOC容器。
+     *
+     * 那么Camel是如何与它整合的呢？从本质上说，如果Camel当做是另外一种bean，也可以被配置的。比如，在2.2节，你配置JMS
+     * 组件连接到ActiveMQ broker，除此之外你能用bean术语使用Spring做这个，像下面这样：
+     *
+     *          <bean id="jms" class="org.apache.camel.component.jms.JmsComponent">
+     *              <property name="connectionFactory">
+     *                  <bean class="org.apache.activemq.ActiveMQConnectionFactory">
+     *                      <property name="brokerURL" value="vm://localhost" />
+     *                   </bean>
+     *              </property>
+     *          </bean>
+     *
+     * 在这种情况下，Camel知道寻找类型为org.apache.camel.Component的bean并将它们自动加入到CamelContext中---在2.2.2节中
+     * 你手动做的任务。
+     *
+     * 但是在Spring中CamelContext的定义在那？在Spring的XML文件内，Camel利用的Spring的扩展机制提供了Camel自定义的XML语法。
+     * 在Spring中加载CamelContext，你可以如下去做：
+     *
+     *          <beans xmlns="http://www.springframework.org/schema/beans"
+     *                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     *                  xsi:schemaLocation="
+     *                      http://www.springframework.org/schema/beans
+     *                      http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+     *                      http://camel.apache.org/schema/spring
+     *                      http://camel.apache.org/schema/spring/camel-spring.xsd">
+     *              ...
+     *              <camelContext xmlns="http://camel.apache.org/schema/spring"/>
+     *          </beans>
+     *
+     * 这样自动启动一个SpringCamelContext，它是一个你为Java DSL使用的DefaultCamelContext的子类。还要注意，在XML文件中
+     * 你必须包括XML架构定义 http://camel.apache.org/schema/spring/camel-spring.xsd --这是需要导入自定义XML元素。
+     * 这段独立的代码不会为了做更多的，你需要告诉Camel什么路由要使用，就像你使用Java DSL时做的那样。下面的代码使用Spring
+     * 产生相同的结果，像清单2.1中的代码。
+     *
+     *      <beans xmlns="http://www.springframework.org/schema/beans"
+     *          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     *          xsi:schemaLocation="
+     *              http://www.springframework.org/schema/beans
+     *              http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+     *              http://camel.apache.org/schema/spring
+     *              http://camel.apache.org/schema/spring/camel-spring.xsd">
+     *
+     *         <bean id="jms" class="org.apache.camel.component.jms.JmsComponent">
+     *              <property name="connectionFactory">
+     *                   <bean class="org.apache.activemq.ActiveMQConnectionFactory">
+     *                      <property name="brokerURL" value="vm://localhost" />
+     *                   </bean>
+     *              </property>
+     *         </bean>
+     *
+     *          <bean id="ftpToJmsRoute" class="com.camel.test.demo.example.c2.FtpToJMSRoute"/>
+     *
+     *          <camelContext xmlns="http://camel.apache.org/schema/spring">
+     *              <routeBuilder ref="ftpToJmsRoute"/>
+     *          </camelContext>
+     *
+     *      </beans>
+     *
+     * 你可能已经注意到，我们正在涉及的com.camel.test.demo.example.c2.FtpToJMSRoute类像RouteBuilder一样，
+     * 为了重现在清单2.1的Java DSL的例子，你必须将匿名RouteBuilder类分离出来放到拥有名字的类中。
+     *  FtpToJMSRoute看上去像这样：
+     *
+     *      public class FtpToJMSRoute extends RouteBuilder {
+     *          public void configure() {
+     *              from("ftp://rider.com" +
+     *                   "/orders?username=rider&password=secret")
+     *                   .to("jms:incomingOrders");
+     *          }
+     *      }
+     *
+     * 现在你知道了Spring的基本知识和如何在它内部加载Camel了。我们可以进一步去看如何用纯XML来写路由规则--
+     * -无需java DSL。
      *
      *
+     * 2.4.2 Spring DSL（The Spring DSL）
      *
      *
      */
