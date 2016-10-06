@@ -20,9 +20,12 @@ public class GreetMeBean {
         System.out.println(greeter.sayHello());
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         ApplicationContext context = new ClassPathXmlApplicationContext("beans.xml");
         GreetMeBean bean = (GreetMeBean) context.getBean("greetMeBean");
         bean.execute();
+
+
+
     }
 }

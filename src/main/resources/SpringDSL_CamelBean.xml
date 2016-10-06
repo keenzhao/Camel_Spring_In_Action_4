@@ -1,0 +1,26 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+                http://www.springframework.org/schema/beans
+                http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+                http://camel.apache.org/schema/spring
+                http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+    <bean id="jms" class="org.apache.camel.component.jms.JmsComponent">
+        <property name="connectionFactory">
+            <bean class="org.apache.activemq.ActiveMQConnectionFactory">
+                <property name="brokerURL" value="vm://localhost"/>
+            </bean>
+        </property>
+    </bean>
+
+    <bean id="downloadLogger" class="com.camel.test.demo.example.c2.DownloadLogger"/>
+
+    <camelContext xmlns="http://camel.apache.org/schema/spring">
+        <route>
+            <from uri="file:d:/temp/inbox?noop=true"/>
+            <process ref="downloadLogger"/>
+            <to uri="jms:incomingOrders"/>
+        </route>
+    </camelContext>
+</beans>
