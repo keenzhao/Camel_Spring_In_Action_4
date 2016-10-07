@@ -232,12 +232,102 @@ public class RoutingWithCamel03_txt {
      *              </route>
      *          </camelContext>
      *
-     *    现在你可以准备运行这个例子了。译者自己的例子:com.camel.test.demo.example.c2.CamelSpringDSL
+     *    现在你可以准备运行这个例子了。（译者自己的例子:com.camel.test.demo.example.c2.CamelSpringDSL）
      *
      *    要是你想从incomingOrders队列消费之后打印此信息又怎样？要做到这一点，你需要创建另一个路由。
      *
      * ★ 使用多路由（USING MULTIPLE ROUTES）
+     *    你可能还记得在Java DSL中每个Java语句都是以from开始创建一个新的路由。使用Spring DSL你也能创建多条路由。
+     *    要做到这点，仅仅需要在CamelContext元素内添加一个route元素即可。例如，把DownloadLogger bean移到第二个
+     *    route，在得到订单发送到incomingOrders之后：
+     *          <camelContext xmlns="http://camel.apache.org/schema/spring">
+     *              <route>
+     *                  <from uri="file:src/data?noop=true"/>
+     *                  <to uri="jms:incomingOrders"/>
+     *              </route>
+     *              <route>
+     *                  <from uri="jms:incomingOrders"/>
+     *                  <process ref="downloadLogger"/>
+     *              </route>
+     *          </camelContext>
      *
+     * 现在在第二个route中消费从incomingOrders队列中的消息。因此，在订单发送到队列后下载的消息将被打印。
+     *
+     * ★ 选择那一种DSL来使用（CHOOSING WHICH DSL TO USE）
+     *    在一个特定的场景中那一种DSL是最好用的是Camel用户的常见问题，这主要归结于个人的偏好。如果你喜欢用Spring或者
+     *    在XML定义一些东西的话，你可能更喜欢纯Spring的方法。如果你想用Java动手做，也许纯java DSL方法更适合你。
+     *
+     *    在任何一种情况下，你都差不多可以访问所有的Camel的功能。Java DSL是一种一个稍微更丰富的语言，因为你对java语言
+     *    的全部力量了如指掌。另外，一些java DSL的特征，像值生成器（创建表达式和谓词）。在Spring DSL中不能用，在另一
+     *    方面，使用Spring让你获得极佳的对象构造能力以及常用的Spring事物抽象概念，像数据库连接和JMS集成。
+     *
+     *    一个常见的妥协（我最喜欢的用法）是Spring和Java DSL两者都用，这是我们下面要涉及的其中一个话题。
+     *
+     *
+     * 2.4.3 使用Camel和Spring（Using Camel and Spring）
+     *     无论你用Java或者Spring DSL写你的路由，在Spring容器中运行Camel给你更多的好处。其中一个，如果你使用Spring
+     *     的DSL，当你想改变你的路由规则时候你不要编译任何代码，此外，您还可以访问到数据库连接器、事务支持和更多的
+     *     Spring产品组合。
+     *     让我们仔细看看Camel提供其他那些Spring的集成。
+     *
+     *     ★ 查找路由生成器（FINDING ROUTE BUILDERS）
+     *        使用Spring CamelContext作为运行环境，以及使用Java DSL开发route是使用Camel最佳的方式。事实上，它是Camel
+     *        最常见的用法。你之前看到的，你可以明确地告诉Spring CamelContext要加载什么路由生成器。您可以通过使用
+     *        RouterBuilder元素做这个：
+     *
+     *              <camelContext xmlns="http://camel.apache.org/schema/spring">
+     *                  <routeBuilder ref="ftpToJmsRoute"/>
+     *              </camelContext>
+     *
+     *       这是一个明确的结果，加载什么到Camel的一个简洁明了的定义。
+     *       不过有时候你可能需要多一点的动态。这是packageScan和contextScan元素加入的地方：
+     *
+     *              <camelContext xmlns="http://camel.apache.org/schema/spring">
+     *                  <packageScan>
+     *                      <package>camelinaction.routes</package>
+     *                  </packageScan>
+     *              </camelContext>
+     *
+     *        packageScan元素将会加载在camelinaction.routes包及其所有的子包中找到的全部的RouteBuilder类。
+     *        你甚至可以挑选包括哪些路由生成器：
+     *
+     *              <camelContext xmlns="http://camel.apache.org/schema/spring">
+     *                  <packageScan>
+     *                      <package>camelinaction.routes</package>
+     *                      <excludes>**.*Test*</excludes>
+     *                      <includes>**.*</includes>
+     *                  </packageScan>
+     *              </camelContext>
+     *
+     *        在这种情况下，你将在camelinaction.routes包中加载所有的路由生成器，除了类名带了"Test"那些。
+     *        匹配的语法类似Apache Ant的文件模式匹配的用法。
+     *
+     *        contextScan元素利用Spring组件扫描特性的优势，
+     *        加载任何被标注了@org.springframework.stereotype.Component注解的Camel的路由生成器，
+     *        让我们使用这个注解来修改FtpToJMSRoute类：
+     *
+     *              @Component
+     *              public class FtpToJMSRoute extends SpringRouteBuilder {
+     *                  public void configure() {
+     *                      from("ftp://rider.com" +
+     *                      "/orders?username=rider&password=secret")
+     *                      .to("jms:incomingOrders");
+     *                  }
+     *              }
+     *
+     *        注意，这个版本使用org.apache.camel.spring.springroutebuilder类，这是包含额外的Spring实用功能的
+     *        RouteBuilder的一个扩展类。您现在可以在您的Spring XML文件中使用下面的配置来启用组件扫描：
+     *
+     *              <context:component-scan base-package="camelinaction.routes"/>
+     *
+     *              <camelContext xmlns="http://camel.apache.org/schema/spring">
+     *                  <contextScan/>
+     *              </camelContext>
+     *
+     *        这将加载在camelinaction.routes包中所有的有@Component注解的Spring的路由生成器（类）。
+     *        在底层，Camel的一些组件，像JMS组件，是建立在Spring抽象库顶部的。在Spring中配置这些组件容易是有道理的。
+     *
+     *     ★ 配置组件和端点（CONFIGURING COMPONENTS AND ENDPOINTS）
      *
      *
      */
