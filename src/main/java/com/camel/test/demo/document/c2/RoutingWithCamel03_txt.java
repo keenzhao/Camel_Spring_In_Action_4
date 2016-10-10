@@ -328,6 +328,97 @@ public class RoutingWithCamel03_txt {
      *        在底层，Camel的一些组件，像JMS组件，是建立在Spring抽象库顶部的。在Spring中配置这些组件容易是有道理的。
      *
      *     ★ 配置组件和端点（CONFIGURING COMPONENTS AND ENDPOINTS）
+     *        你在2.4.1节看到的在Spring XML中组件可以被定义并被Camel自动拿到，例如再看JMS部件：
+     *
+     *              <bean id="jms" class="org.apache.camel.component.jms.JmsComponent">
+     *                  <property name="connectionFactory">
+     *                      <bean class="org.apache.activemq.ActiveMQConnectionFactory">
+     *                         <property name="brokerURL" value="vm://localhost" />
+     *                      </bean>
+     *                  </property>
+     *              </bean>
+     *
+     *        这个定义了ID的组件的bean将被调用。基于用例给组件一个更有意义的名字让你有了灵活性。你的应用可需要集成2个
+     *        JMS broker，例如，一个可能是Apache ActiveMQ和另一个可能是SonicMQ：
+     *
+     *              <bean id="activemq" class="org.apache.camel.component.jms.JmsComponent">
+     *                  ...
+     *              </bean>
+     *              <bean id="sonicmq" class="org.apache.camel.component.jms.JmsComponent">
+     *                  ...
+     *              </bean>
+     *
+     *        然后，你可以像activemq:myActiveMQQueue或者sonicmq:mySonicQueue这样来使用URIs。
+     *        Endpoints也可以使用Camel的Spring XML扩展来定义。例如，你可以摆脱FTP endpoint连接Rider汽车配件公司
+     *        传统订单服务器其路由看上去像这样：
+     *
+     *              <camelContext xmlns="http://camel.apache.org/schema/spring">
+     *                  <endpoint id="ridersFtp"
+     *                      uri="ftp://rider.com/orders?username=rider&password=secret"/>
+     *                  <route>
+     *                      <from ref="ridersFtp"/>
+     *                      <to uri="jms:incomingOrders"/>
+     *                  </route>
+     *              </camelContext>
+     *
+     *       注意：你可能注意到，凭证直接加入到端点的URI中了，这不是最好的解决方案。一个更好的办法是在其他地方定义和充分保护
+     *       凭据。在第6章的6.1.6节，你可以看到Camel的属性组件或Spring的属性占位符是如何被用来处理这个。
+     *
+     *     ★ 导入配置和路由（IMPORTING CONFIGURATION AND ROUTES）
+     *        在Spring开发中一个常见的做法是将一个应用的的装配分离成多个XML文件。这种做法主要是让XML更具可读性；你可能不想
+     *        在一个没有若干分离的单一XML文件内辛苦地读完成千上万行。
+     *        将一个应用分离成几个XML文件的里一个原因是增加重用的可能性。比如，一些其他的应用可能需要一个类似的JMS设置，因此
+     *        你可以用下面的内容定义一个名为jms-setup.xml的第二个Spring XML文件：
+     *
+     *              <beans xmlns="http://www.springframework.org/schema/beans"
+     *                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     *                      xsi:schemaLocation="
+     *                          http://www.springframework.org/schema/beans
+     *                          http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+     *
+     *                  <bean id="jms" class="org.apache.camel.component.jms.JmsComponent">
+     *                      <property name="connectionFactory">
+     *                          <bean class="org.apache.activemq.ActiveMQConnectionFactory">
+     *                             <property name="brokerURL" value="vm://localhost" />
+     *                         </bean>
+     *                      </property>
+     *                  </bean>
+     *              </beans>
+     *
+     *        然后这个文件通过使用下面的一行语句能被导入到包含CamelContext的XML文件中：
+     *
+     *              <import resource="jms-setup.xml"/>
+     *
+     *        现在CamelContext可以使用JMS构件配置，即使它是在一个单独分离的文件中定义。
+     *
+     *        另一个有用的东西是在分离文件中定义Spring DSL路由本身。因为理由元素需要在CamelContext元素中定义，引入一个
+     *        额外的概念来定义路由。你可以在一个routeContext元素中定义路由，如下所示：
+     *
+     *              <routeContext id="ftpToJms" xmlns="http://camel.apache.org/schema/spring">
+     *                  <route>
+     *                      <from uri="ftp://rider.com/orders?username=rider&password=secret"/>
+     *                      <to uri="jms:incomingOrders"/>
+     *                  </route>
+     *              </routeContext>
+     *
+     *        这个routeContext元素可以在其他文件中也可以在同一文件中。你可以使用routeContextRef元素导入在routeContext中
+     *        定义的路由。在一个CamelContext元素内部使用routeContextRef元素，像这样：
+     *
+     *              <camelContext xmlns="http://camel.apache.org/schema/spring">
+     *                  <routeContextRef ref="ftpToJms"/>
+     *              </camelContext>
+     *
+     *        如果你在多个camelContext中导入routeContext，在每个camelContext中都会创建新的路由实例。在上述的情况下，
+     *        使用相同的endpoint URIs的两个完全一样的路由，这将会导致它们竞争相同的资源。在这种情况下，同一时间点上只会
+     *        有一个路由从FTP接收特定的文件。一般来说，在多个camelContext中重用路由时候，你要小心处理。
+     *
+     *     ★ 高级配置选项（ADVANCED CONFIGURATION OPTIONS）
+     *        当使用Spring CamelContext时有许多可用的其他配置项：
+     *             ■  第4章讨论可插入的bean注册表
+     *             ■  第12章涵盖跟踪和延迟机制
+     *             ■  第13章提及定制类解析、跟踪、故障处理和启动
+     *             ■  第16章涵盖拦截器配置
+     *        我们在后面要使用这些路由配置技术，你要准备好使用Camel的EIPs实现来应付更高级的路由主题。
      *
      *
      */
