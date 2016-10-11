@@ -38,13 +38,61 @@ public class RoutingWithCamel04_txt {
      *              .when(predicate)
      *                  .to("jms:csvOrders");
      *
-     *       你可能已经注意到，我们没有填写每一个方法所需的谓词。Camel中的一个谓词是一个简单的接口，只有一个matches方法：
+     *           你可能已经注意到，我们没有填写每一个方法所需的谓词。Camel中的一个谓词是一个简单的接口，只有一个matches方法：
      *
      *          public interface Predicate {
      *              boolean matches(Exchange exchange);
      *          }
      *
-     *       例如，你可以把一个谓词理解成java中if语句的布尔表达式。
+     *           例如，你可以把一个谓词理解成java中if语句的布尔表达式。
+     *
+     *           你自己可能不想看到exchange内容并来做一个比较。幸运地是，谓词往往是从表达式中建立起来的，而表达式是用来从
+     *       基于表达式内容的exchange中提取结果的。在Camel中有许多不同的表达式语言供选择，其中包括Simple，EL，JXPath，
+     *       Mvel，OGNL,PHP,BeanShell,JavaScript, Groovy, Python, Ruby,XPath, and XQuery。正如你在第4章看到的那样，
+     *       在Camel中，你甚至可以使用一个方法调用一个bean作为一个表达式。在这种情况下，你将要使用作为Java DSL的一部分的
+     *       表达式生成器方法。
+     *           在RouteBuilder内，你可以通过使用标头来启用返回一个对标头值进行求值的表达式的方法。例如，
+     *       header("camelfilename")将创建一个在传入的exchange上将决定CamelFileName标头值的表达式，在这个表达式中，
+     *       你可以调用一些方法来创建一个谓词。因此，检查文件扩展名是否是等于.xml，您可以使用以下谓词：
+     *
+     *              header("CamelFileName").endsWith(".xml")
+     *
+     *       完整的CBR显示在这里。
+     *
+     *              context.addRoutes(new RouteBuilder() {
+     *                  public void configure() {
+     *
+     *                      from("file:src/data?noop=true").to("jms:incomingOrders");
+     *
+     *                      from("jms:incomingOrders") //基于内容的路由
+     *                      .choice()
+     *                          .when(header("CamelFileName").endsWith(".xml"))
+     *                              .to("jms:xmlOrders")
+     *                          .when(header("CamelFileName").endsWith(".csv"))
+     *                              .to("jms:csvOrders");
+     *
+     *                      from("jms:xmlOrders").process(new Processor() {  //测试路由打印消息内容
+     *                                  public void process(Exchange exchange) throws Exception {
+     *                                          System.out.println("Received XML order: "
+     *                                                       + exchange.getIn().getHeader("CamelFileName"));
+     *                                  }
+     *                      });
+     *
+     *                      from("jms:csvOrders").process(new Processor() {  //测试路由打印消息内容
+     *                                  public void process(Exchange exchange) throws Exception {
+     *                                          System.out.println("Received CSV order: "
+     *                                                      + exchange.getIn().getHeader("CamelFileName"));
+     *                                  }
+     *                      });
+     *                  }
+     *              });
+     *
+     *       为了运行这个例子，请转到在本书的源代码chapter2/cbr目录下并运行这个Maven命令：
+     *              mvn clean compile exec:java -Dexec.mainClass=camelinaction.OrderRouter_CBR
+     *       这将消费在chapter2/cbr/src/data目录下的2个订单文件并输出：
+     *              Received CSV order: message2.csv
+     *              Received XML order: message1.xml
+     *
      *
      *
      *
