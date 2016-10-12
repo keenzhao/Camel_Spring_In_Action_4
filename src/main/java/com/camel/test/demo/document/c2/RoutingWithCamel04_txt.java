@@ -309,8 +309,205 @@ public class RoutingWithCamel04_txt {
      *         您可能会考虑整个过程失败。在这种情况下，你做什么？
      *
      *       ★ 停止异常的组播（STOPPING THE MULTICAST ON EXCEPTION）
+     *          Rider汽车配件公司的组播解决方案存在一个问题：如果订单发送到会计队列失败，它可能需要较长的时间追查到生产
+     *          订单和客户账单。要解决这个问题，你可以利用多播的stopOnException功能。当启用时，此功能将在第一个异常捕获上
+     *          停止组播，因此你可以采取任何必要的行动。
+     *          要启用此功能，使用stopOnException方法如下：
+     *
+     *                  from("jms:xmlOrders")
+     *                      .multicast().stopOnException()
+     *                      .parallelProcessing().executorService(executor)
+     *                      .to("jms:accounting", "jms:production");
+     *
+     *          要处理从这个路由返回的异常，您将需要使用Camel的错误处理（error-handling）功能，这是在第5章中详细描述。
+     *          使用Spring DSL的时候，这条路由看起来略有不同：
+     *
+     *                  <route>
+     *                      <from uri="jms:xmlOrders"/>
+     *                      <multicast stopOnException="true" parallelProcessing="true" executorServiceRef="executor">
+     *                          <to uri="jms:accounting"/>
+     *                          <to uri="jms:production"/>
+     *                      </multicast>
+     *                  </route>
+     *
+     *          主要的区别是用于设置标志的方法，像在Java DSL中的stopOnException方法现在是multicast元素上的属性。此外，
+     *          executor service作为一个引用指向像下面这个Spring bean：
+     *
+     *                  <bean id="executor" class="java.util.concurrent.Executors"
+     *                          factory-method="newFixedThreadPool">
+     *                      <constructor-arg index="0" value="16"/>
+     *                  </bean>
+     *
+     *          现在你知道了在Camel中如何组播消息了，但你可能会认为，这似乎是一个相当静态的解决方案，因为改变目的地意味
+     *          着改变路由。让我们看看如何更动态地可以发送给多个收件人。
      *
      *
+     * 2.5.4 使用收件人列表（Using recipient lists）
+     *       在上一节中，你实现了一个新经理的建议并行了会计和生产队列，因此，订单可以更迅速地处理。Rider汽车零部件公司的
+     *       顶级客户首先注意到这个方法的问题：现在所有的订单都直接进入生产，顶级客户没有得到高于规模较小的客户优先权。
+     *       他们的订单需要更长的时间，他们正在失去商业机会。管理层建议立即回到旧的模式，但你提出一个简单的解决方案来解决
+     *       问题：只有顶级客户订单被并行化，所有其他的订单必须首先去会计，从而不停滞生产。
+     *
+     *       该解决方案可以通过使用收件人列表EIP来实现。如图2.14所示，一个收件人列表首先检查传入的消息，然后根据消息内容
+     *       生成预期的收件人的列表，并将消息发送给那些收件人。
+     *       一个收件人通过一个endpoint URI来指定。注意，收件人列表与组播是不同的，因为收件人列表是动态的。
+     *
+     *       Camel提供了一个recipientList方法来实现收件人列表EIP。例如，下面这个路由将从一个名为recipients标头中获取
+     *       收件人列表，每个收件人与下一个（收件人）都是通过逗号分割开的：
+     *
+     *              from("jms:xmlOrders")
+     *                  .recipientList(header("recipients"));
+     *
+     *       这是有用的，如果你已经有了一些消息的信息，它们可以用来构建目标名称，你可以使用一个表达式来创建列表。为了给
+     *       收件人列表提取有意义的endpoint URI，表达式必须是一个可迭代的结果。将工作的值是java.util.Collection,
+     *       java.util.Iterator,Java arrays, org.w3c.dom.NodeList和如图所示的例子，一个用逗号分割多值的字符串。
+     *       在Rider汽车零件公司的情形下，消息不包含该列表。你需要一些方法来确定信息是不是来自一个顶级客户。
+     *       一个简单的解决方案可能是添加一个自定义的处理器来做这个：
+     *
+     *              from("jms:xmlOrders")
+     *              .setHeader("customer", xpath("/order/@customer"))
+     *              .process(new Processor() {
+     *                      public void process(Exchange exchange) throws Exception {
+     *                          String recipients = "jms:accounting";
+     *                          String customer = exchange.getIn().getHeader("customer", String.class);
+     *                          if (customer.equals("honda")) {
+     *                              recipients += ",jms:production";
+     *                          }
+     *                          exchange.getIn().setHeader("recipients", recipients);
+     *                      }
+     *              })
+     *              .recipientList(header("recipients"));
+     *
+     *       处理器现在只有当客户是黄金支持级别的才设置recipients标头为"jms:accounting, jms:production"。
+     *       这里对黄金支持级别的检查被大大地简化了，理论上你只要查询数据库完成这个检查。任何其他订单只会被路由到会计，在
+     *       检查完成之后发送到生产。
+     *
+     *       这条路由的Spring DSL版本非常类似下面的布局：
+     *              <route>
+     *                  <from uri="jms:xmlOrders" />
+     *                  <setHeader headerName="customer">
+     *                      <xpath>/order/@customer</xpath>
+     *                  </setHeader>
+     *                  <process ref="calculateRecipients" />
+     *                  <recipientList>
+     *                      <header>recipients</header>
+     *                  </recipientList>
+     *              </route>
+     *
+     *       正如你可能已经预期，在java DSL路由指定匿名处理器必须分离成为一个被命名的处理器。该处理器然后加载Spring bean
+     *       并给定名称为calculateRecipients，然后在process元素中使用ref属性来引用。
+     *
+     *       收件人不被嵌入在消息中作为标头或实体的一部分是常见的，这种情况下使用一个自定义处理器是完美的功能，但是不友好。
+     *       在使用一个自定义的处理器时，您必须直接操作该exchange和消息的APIs。幸运的是，Camel支持一个更好的方式来实现收
+     *       件人列表。
+     *
+     *       ★ 收件人列表注解（RECIPIENT LIST ANNOTATION）
+     *          你可以添加一个@RecipientList注解在一个普通的java类（一个java bean）的方法上，而不是在DSL中使用
+     *          recipientList方法。这个注解告诉Camel被注解的方法应该使用从exchange中生成的收件人列表。然而，如果该类被
+     *          用于与Camel的bean集成的话，此行为只被调用。
+     *
+     *          例如，再一个大大简化的路由中使用一个注解bean更换您在上一节中使用的自定义处理器的结果：
+     *
+     *                  from("jms:xmlOrders").bean(RecipientListBean.class);
+     *
+     *          现在所有的计算接收者和发送消息的业务逻辑都会在类RecipientListBean中捕获，像这样：
+     *
+     *                  public class RecipientListBean {
+     *                      @RecipientList
+     *                      public String[] route(@XPath("/order/@customer") String customer) {
+     *                          if (isGoldCustomer(customer)) {
+     *                              return new String[] {"jms:accounting", "jms:production"};
+     *                          } else {
+     *                              return new String[] {"jms:accounting"};
+     *                          }
+     *                      }
+     *
+     *                      private boolean isGoldCustomer(String customer) {
+     *                          return customer.equals("honda");
+     *                      }
+     *
+     *                  }
+     *
+     *          注意，返回bean的类型是想得到的收件人的列表。Camel将采用此列表，并发送一份消息副本到列表中的每一个目的地。
+     *
+     *          这种（注解）方法实现收件人列表的一个很好的事情是，它被彻底地从路由中分离出来，这使得它更易阅读。您还可以
+     *          访问Camel的bean-binding注解，它允许您使用表达式从消息中提取数据，所以你不必手动探究exchange。本示例使用
+     *          @XPath bean-binding注解，在实体中抓取order元素中的customer属性，在第4章将涵盖这些关于使用bean的全部注解。
+     *
+     *          要运行这个例子，到书中的源代码chapter2/recipientlist目录并运行这个命令：
+     *
+     *                  mvn clean compile exec:java -Dexec.mainClass=camelinaction.OrderRouterWithRecipientListBean
+     *
+     *          这将在命令行中输出下面内容：
+     *
+     *                  Accounting received order: message1.xml
+     *                  Production received order: message1.xml
+     *                  Accounting received order: message2.xml
+     *
+     *          你为什么得到这个输出？你在src/data目录下有以下两个订单：
+     *
+     *              ■ message1.xml
+     *                  <?xml version="1.0" encoding="UTF-8"?>
+     *                  <order name="motor" amount="1000" customer="honda"/>
+     *              ■ message2.xml
+     *                  <?xml version="1.0" encoding="UTF-8"?>
+     *                  <order name="motor" amount="2" customer="joe's bikes"/>
+     *
+     *          第一个消息是来自一个黄金客户，依据Rider汽车零件公司的规则，所以它被路由到会计和生产。第二个订单来自
+     *          一个较小的客户，所以它送到会计那验证客户的信誉。
+     *
+     *          这个系统现在缺乏一种方法来检查这些在路由中流动的消息，而不是等待直到它们到达路由的终点。让你给我们来看下
+     *          侦听是如何能帮助我们（来解决这个问题)的。
+     *
+     *
+     * 2.5.5 使用侦听方法（Using the wireTap method）
+     *       通常在企业应用程序中，对于检查在系统中流动的消息它是有用的和必要的。例如，当一个订单失败时，您需要一个方法
+     *       来查看接收到的消息以确定故障的原因。
+     *
+     *       正如你以前所做的那样，您可以使用一个简单的处理器，将传入消息的信息输出到控制台或将其追加到一个文件中。这里是
+     *       一个将消息正文输出到控制台的处理器，：
+     *
+     *              from("jms:incomingOrders")
+     *              .process(new Processor() {
+     *                  public void process(Exchange exchange) throws Exception {
+     *                      System.out.println("Received order: " + exchange.getIn().getBody());
+     *                  }
+     *              })
+     *              ...
+     *
+     *       用于调试的目的这没什么问题，但在生产环境使用的话它是一个很差的解决方案用。如果你想要消息headers，exchange属性，
+     *       或是在消息exchange中的其他数据呢？理想情况下，您可以复制整个传入的exchange，并将其发送到另一个通道去审计。
+     *       如图2.15所示，侦听EIP定义了这样一个解决方案。
+     *
+     *       通过在Java DSL中使用wireTap方法，你可发一份exchange的拷贝到一个次要的的目的地，而不影响路由的其他的行为：
+     *
+     *              from("jms:incomingOrders")
+     *              .wireTap("jms:orderAudit")
+     *              .choice()
+     *                  .when(header("CamelFileName").endsWith(".xml"))
+     *                      .to("jms:xmlOrders")
+     *                  .when(header("CamelFileName").regex("^.*(csv|csl)$"))
+     *                      .to("jms:csvOrders")
+     *                  .otherwise()
+     *                      .to("jms:badOrders");
+     *
+     *       前面的代码发送一份exchange的拷贝到orderAudit队列，原始的exchange继续穿越路由，就好像你根本没有用过
+     *       侦听一样。Camel不等待来自侦听的响应，因为侦听设置消息交换模式（MEP）为InOnly。这意味着消息将使用即发即弃
+     *       的方式被发送 --- 它不会等待一个回应。
+     *
+     *       在Spring DSL中，你一样可以容易地配置一个侦听：
+     *
+     *              <route>
+     *                  <from uri="jms:incomingOrders"/>
+     *                  <wireTap uri="jms:orderAudit"/>
+     *                  ..
+     *
+     *       你能用一个侦听到的消息做什么？在这一点上可以做一些事情：
+     *          ■ 你可以像你之前做的那样打印信息到控制台。对于简单调试的目的这是有用的。
+     *          ■ 你可以保存信息到在持久性存储中（在一个文件或数据库中）为以后检索所用。
+     *
+     *       侦听是一个非常有用的监控工具，但它留下了大部分的工作给你去做。
+     *       我们将在第12章讨论一些Camel更强大的跟踪和审计工具。
      *
      *
      *
