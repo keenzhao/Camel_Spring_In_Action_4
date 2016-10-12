@@ -30,8 +30,16 @@ public class TransformingDataWithCamel01_txt {
      *
      *
      * 3.1 数据转换概述（Data transformation overview）
+     *     Camel提供了许多数据转换的技术，我们很快将会介绍它们。但首先，我们用Camel中数据转换概述来开始。
+     *     数据转换是一个广泛的术语，涉及两种类型的转换：
      *
+     *          ■ 数据格式转换 --- 消息体的数据格式从一种形式转化为另一种。
+     *            例如，一个CSV记录被格式化为XML。
      *
+     *          ■ 数据类型转换 --- 消息体的数据类型从一种类型转换到另一种。
+     *            例如，java.lang.string转化为javax.jms.TextMessage。
+     *
+     *     图3.1说明了将消息体从一种形式转换成另一种形式的原则。 这种转换可以包含任何格式和类型转换的组合。在大多数情况下，
      *
      *
      *
