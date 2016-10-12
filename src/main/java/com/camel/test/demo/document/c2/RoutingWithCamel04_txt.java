@@ -88,10 +88,227 @@ public class RoutingWithCamel04_txt {
      *              });
      *
      *       为了运行这个例子，请转到在本书的源代码chapter2/cbr目录下并运行这个Maven命令：
+     *
      *              mvn clean compile exec:java -Dexec.mainClass=camelinaction.OrderRouter_CBR
+     *
      *       这将消费在chapter2/cbr/src/data目录下的2个订单文件并输出：
+     *
      *              Received CSV order: message2.csv
      *              Received XML order: message1.xml
+     *
+     *       输出来自于configure方法尾部的2个路由。这些路由消费来自xmlOrders和svOrders队列的消息并打印输出消息。
+     *       您使用这些路由来测试基于内容路由的工作预期。更高级的路由测试技术将在第6章中讨论。
+     *
+     *       ★ 使用OTHERWISE从句（USING THE OTHERWISE CLAUSE）
+     *          一个Rider汽车配件公司的客户使用.csl扩展名发送CSV订单。当前路由只能处理.csv和.xml文件并将丢弃使用其他
+     *          文件扩展名的所有文件。这不是一个好的解决方案，因此你需要做一些改进。
+     *          一个处理额外扩展名的办法是使用一个正则表达式作为一个谓词而不是简单的endsWith调用。下面的路由能处理额外
+     *          的扩展名：
+     *
+     *                  from("jms:incomingOrders")
+     *                  .choice()
+     *                      .when(header("CamelFileName").endsWith(".xml"))
+     *                          .to("jms:xmlOrders")
+     *                      .when(header("CamelFileName").regex("^.*(csv|csl)$"))
+     *                          .to("jms:csvOrders");
+     *
+     *          尽管这个解决方案仍然存在同样的问题。任何不符合文件扩展名模式的订单将会被丢弃。事实上，你应该处理那些进来的
+     *          坏订单为了让有人可以修复这个问题。你可以使用otherwise从句来解决这个：
+     *
+     *                  from("jms:incomingOrders")
+     *                  .choice()
+     *                      .when(header("CamelFileName").endsWith(".xml"))
+     *                          .to("jms:xmlOrders")
+     *                      .when(header("CamelFileName").regex("^.*(csv|csl)$"))
+     *                          .to("jms:csvOrders")
+     *                      .otherwise()
+     *                          .to("jms:badOrders");
+     *
+     *          现在，所有没有.csv,.csl,或.xml扩展名的订单会被发送到badOrders队列处理。为了运行这个例子，请转到在本书
+     *          的源代码chapter2/cbr目录下并运行这个命令：
+     *
+     *                  mvn clean compile exec:java -Dexec.mainClass=camelinaction.OrderRouterOtherwise
+     *
+     *          这将消费在chapter2/cbr/src/data目录下的4个订单文件并输出：
+     *
+     *                  Received CSV order: message2.csv
+     *                  Received XML order: message1.xml
+     *                  Received bad order: message4.bad
+     *                  Received CSV order: message3.csl
+     *
+     *          你现在可以看到坏的订单已经被接收了。
+     *
+     *          ★ 在一个CBR之后的路由（ROUTING AFTER A CBR）
+     *             CBR看上去像路由的终点；消息被路由到几个目的地，别的就没有了。继续流动意味着你需要另一条路由，对吗？
+     *             不过，有几种方式你可以在一个CBR之后继续路由。一种方式是通过使用另一个路由，就像清单2.4中的您将测试消息
+     *             打印到控制台上一样。继续流动的另一种方式是关闭choice块并它之后的管道中加入另一个处理器。
+     *             你可以使用end方法关闭choice块：
+     *
+     *                  from("jms:incomingOrders")
+     *                  .choice()
+     *                      .when(header("CamelFileName").endsWith(".xml"))
+     *                          .to("jms:xmlOrders")
+     *                      .when(header("CamelFileName").regex("^.*(csv|csl)$"))
+     *                          .to("jms:csvOrders")
+     *                      .otherwise()
+     *                          .to("jms:badOrders")
+     *                  .end()
+     *                  .to("jms:continuedProcessing");
+     *
+     *             这里，choice已经被关闭，另外一个to已经加入到路由。
+     *             现在，在使用choice选择各自的目的地后，该消息也会将被路由到continued-Processing队列。如图2.11所示。
+     *
+     *             您还可以控制choice块中的最终目的地是什么。例如，你可能不希望坏订单继续通过其余的路线。你希望他们能被
+     *             路由到badOrders队列和停在那里。在这种情况下，你可以使用DSL中的stop方法：
+     *
+     *                  from("jms:incomingOrders")
+     *                  .choice()
+     *                      .when(header("CamelFileName").endsWith(".xml"))
+     *                          .to("jms:xmlOrders")
+     *                      .when(header("CamelFileName").regex("^.*(csv|csl)$"))
+     *                          .to("jms:csvOrders")
+     *                      .otherwise()
+     *                          .to("jms:badOrders").stop()
+     *                  .end()
+     *                  .to("jms:continuedProcessing");
+     *
+     *             现在，任何订单进入到otherwise块将只会被送到badOrders队列 --- 不会到达continuedProcessing队列。
+     *
+     *             使用Spring DSL，这个路由看上去有点不同：
+     *
+     *                  <route>
+     *                      <from uri="jms:incomingOrders"/>
+     *                      <choice>
+     *                          <when>
+     *                              <simple>${header.CamelFileName} regex '^.*xml$'</simple>
+     *                              <to uri="jms:xmlOrders"/>
+     *                          </when>
+     *                          <when>
+     *                              <simple>${header.CamelFileName} regex '^.*(csv|csl)$'</simple>
+     *                              <to uri="jms:csvOrders"/>
+     *                          </when>
+     *                          <otherwise>
+     *                              <to uri="jms:badOrders"/>
+     *                              <stop/>
+     *                          </otherwise>
+     *                      </choice>
+     *                      <to uri="jms:continuedProcessing"/>
+     *                  </route>
+     *
+     *             除了是在XML中而不是在Java中定义，与Java DSL版本相比，这里有两个主要的差异要注意：
+     *                  ■ 你使用一个Simple表达式，而不是基于java的谓词。Simple表达式语言通常被用来替代Java DSL的谓词。
+     *                    一个Simple表达式语言的完整指南在 附录A中可以找到。
+     *                  ■ 你没有使用一个end()调用来结束choice块，因为XML需要用一个明确的关闭元素</choice>形式来结束块。
+     *
+     *
+     * 2.5.2 使用消息过滤器（Using message filter）
+     *       Rider汽车配件公司现在有一个新的问题，他们的QA部门表示需要能够发送测试订单到已投入使用的订单系统的Web前端模块。
+     *       您目前的解决方案是当作真实的订单来接受这些订单，并将其发送到内部系统进行处理。你们已经建议QA应该在一个真实系统
+     *       的开发克隆上进行测试。但管理层已经否决了这一想法，理由是预算有限。您需要的是一个将丢弃这些测试消息同时仍然
+     *       在操作真实的订单的解决方案。
+     *
+     *       如图2.12所示，消息过滤器EIP,提供了一个很好的方式处理这类问题。如果某个条件被满足传入的消息才通过过滤器，失败
+     *       条件的消息将被删除。
+     *
+     *       让我们看看如何使用Camel来实现这个。记得Rider汽车配件公司的前端模块只发送XML格式的订单，所以你可以把这个过滤器
+     *       放在存放所有XML格式的订单的xmlOrders队列之后。测试消息有一个额外的测试属性设置，所以你可以使用这个来做过滤。
+     *       测试消息看起来像这样：
+     *
+     *              <?xml version="1.0" encoding="UTF-8"?>
+     *              <order name="motor" amount="1" customer="foo" test="true"/>
+     *
+     *       整个解决方案的实现在riderRouterWithFilter.java文件中，在本书的源代码发布中包含了chapter2/filter项目。
+     *       这个过滤器看起来像这样：
+     *
+     *              from("jms:xmlOrders").filter(xpath("/order[not(@test)]"))
+     *              .process(new Processor() {
+     *                      public void process(Exchange exchange) throws Exception {
+     *                          System.out.println("Received XML order: "
+     *                          + exchange.getIn().getHeader("CamelFileName"));
+     *                      }
+     *              });
+     *
+     *       为了运行这个例子，在命令行下执行下面的Maven命令：
+     *
+     *              mvn clean compile exec:java -Dexec.mainClass=camelinaction.OrderRouterWithFilter
+     *
+     *       在命令行下将输出：
+     *
+     *              Received XML order: message1.xml
+     *
+     *       在过滤器之后您只接收一个消息，因为测试消息已被过滤掉了。
+     *
+     *       你可能已经注意到这个例子使用一个XPath表达式来过滤掉测试消息。XPath表达式可用于创建基于XML有效载荷的条件。
+     *       在这种情况下，表达式将那些没有test属性的订单求值为true。就像你回过头来看2.4.2节一样，当Spring DSL使用的时候，
+     *       你不能使用一个匿名内部类的Processor，您必须命名Processor类，并在Spring XML文件中添加一个bean条目。
+     *       所以在Spring DSL中一个消息过滤器路由看起来像这样：
+     *
+     *              <route>
+     *                  <from uri="jms:xmlOrders"/>
+     *                  <filter>
+     *                      <xpath>/order[not(@test)]</xpath>
+     *                      <process ref="orderLogger"/>
+     *                  </filter>
+     *              </route>
+     *
+     *       这个路由的流程仍然与java DSL版本相同，但这里你要使用在Spring XML文件中定义的orderLogger bean来引用处理器。
+     *       到目前为止，我们看到的EIPs只发送消息到一个单一的目标。下一步，我们将看到如何可以发送到多个目的地。
+     *
+     *
+     * 2.5.3 使用多播（Using multicasting）
+     *       在企业应用中，你经常n需要发送一个消息的拷贝到几个不同的目的地来进行处理。当目的地列表提前知道并且是静态的时候，
+     *       你可以在路由中添加一个元素，从源endpoint消费消息然后将消息发送到目的地的列表中。借用计算机网络的专业术语，
+     *       我们称这种行为为组播EIP。
+     *
+     *       目前在Rider汽车零部件公司，订单是按一步一步的方式来处理的。他们首先发送给会计来确认客户身份，然后到生产制造。
+     *       一个聪明的新经理建议通过在同一时间同时发送订单到会计和生产，他们可以提高操作的速度。这将减少从会计确定到生产
+     *       所涉及的等待延迟。你被要求实现这一变化的系统。
+     *       使用多播，您可以设想如图2.13所示的解决方案。
+     *
+     *       使用Camel，你可以使用Java DSL的multicast方法来实现这个解决方案。
+     *
+     *              from("jms:xmlOrders").multicast().to("jms:accounting", "jms:production");
+     *
+     *       要运行这个例子，到书中的源代码chapter2/multicast目录并运行这个命令：
+     *
+     *              mvn clean compile exec:java -Dexec.mainClass=camelinaction.OrderRouterWithMulticast
+     *
+     *       您应该在命令行上看到以下输出：
+     *
+     *              Accounting received order: message1.xml
+     *              Production received order: message1.xml
+     *
+     *       这两行输出是来自从会计和生产队列消费的两个测试路由，然后将经过修饰的文本消息输出到控制台。
+     *
+     *              提示：为了处理在一个多播调用服务的响应，一个聚合器被使用。在第8章有关于聚合器更多的内容。
+     *
+     *       默认情况下，多播是顺序发送消息副本。在前面的示例中，一个消息先被发送到会计队列，然后发送到生产队列。但是如果
+     *       你想并行发送它们呢？
+     *
+     *       ★ 并行多播（PARALLEL MULTICASTING）
+     *          使用多播并行发送消息只涉及一个额外的DSL方法：parallelProcessing。扩展下前面的多播的例子，你可以添加
+     *          parallelProcessing方法如下：
+     *
+     *              from("jms:xmlOrders")
+     *                  .multicast().parallelProcessing()
+     *                  .to("jms:accounting", "jms:production");
+     *
+     *         这将引起多播按并行方式分发消息到目的地。
+     *         如果您没有指定其他的，则使用默认的线程池大小为10。如果你想更改该默认设置，你可以设置基础的用于启动新的
+     *         异步消息发送的java.util.concurrent.ExecutorService，使用executorService DSL方法。下面是一个例子：
+     *
+     *              ExecutorService executor = Executors.newFixedThreadPool(16);
+     *
+     *              from("jms:xmlOrders")
+     *                  .multicast().parallelProcessing().executorService(executor)
+     *                  .to("jms:accounting", "jms:production");
+     *
+     *         此代码将线程的最大数目增加到16个，以处理大量的传入请求。有关Camel线程模型和线程池的更多信息，请参见第10章。
+     *
+     *         默认情况下，组播将持续发送消息到目的地，哪怕有一个失败了。然而，在您的应用程序中，如果一个目的地失败，
+     *         您可能会考虑整个过程失败。在这种情况下，你做什么？
+     *
+     *       ★ 停止异常的组播（STOPPING THE MULTICAST ON EXCEPTION）
      *
      *
      *

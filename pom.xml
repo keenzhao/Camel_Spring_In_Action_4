@@ -85,6 +85,13 @@
             <version>5.14.1</version>
         </dependency>
 
+        <!-- AKKA 高并发、分布式和容错应用的工具包和运行时 -->
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-actor_2.11</artifactId>
+            <version>2.4.11</version>
+        </dependency>
+
         <!-- Eclipse AspectJ组件 -->
         <dependency>
             <groupId>org.aspectj</groupId>
